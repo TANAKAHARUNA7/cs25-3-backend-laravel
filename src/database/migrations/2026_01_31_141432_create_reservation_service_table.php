@@ -12,8 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('reservation_service', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->foreignId('reservation_id')
+                ->constrained()
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+
+            $table->foreignId('service_id')
+                ->constrained()
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+
+            $table->integer('qty')->default(1);
+            $table->decimal('unit_price', 10, 2);
+
+            $table->primary(['reservation_id', 'service_id']);
         });
     }
 

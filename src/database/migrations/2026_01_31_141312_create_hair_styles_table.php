@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('hair_styles', function (Blueprint $table) {
             $table->id();
+            $table->string('title', 255);
+            $table->string('image', 255);
+            $table->string('image_key', 255);
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

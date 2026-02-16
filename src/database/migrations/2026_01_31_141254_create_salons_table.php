@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('salons', function (Blueprint $table) {
             $table->id();
+            $table->string('image', 255);
+            $table->string('image_key',255);
+            $table->text('introduction');
+            $table->json('information');
+            $table->string('map', 255);
+            $table->json('traffic');
+
             $table->timestamps();
         });
     }

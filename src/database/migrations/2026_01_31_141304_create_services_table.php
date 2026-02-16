@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
+            $table->string('service_name', 255);
+            $table->decimal('price', 10,2);
+            $table->integer('duration_min');
             $table->timestamps();
         });
     }

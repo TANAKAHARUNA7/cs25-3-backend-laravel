@@ -13,7 +13,21 @@ return new class extends Migration
     {
         Schema::create('designers', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('user_id')
+                ->constrained()
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+
+            $table->string('image', 255);
+            $table->string('inmage_key', 255);
+            $table->integer('experience');
+            $table->string('good_at', 255);
+            $table->string('personality', 255);
+            $table->text('message');
+
             $table->timestamps();
+
         });
     }
 

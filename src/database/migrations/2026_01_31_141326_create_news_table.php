@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('news', function (Blueprint $table) {
             $table->id();
+            $table->string('title', 255);
+            $table->text('content');
+            $table->string('image', 255)->nullable();
+            $table->string('image_key', 255)->nullable();
             $table->timestamps();
         });
     }

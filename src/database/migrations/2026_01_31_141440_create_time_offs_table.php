@@ -13,7 +13,17 @@ return new class extends Migration
     {
         Schema::create('time_offs', function (Blueprint $table) {
             $table->id();
+            
+            $table->foreignId('designer_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->date('start_at');
+            $table->date('end_at');
+
             $table->timestamps();
+
+            $table->index(['designer_id', 'start_at', 'end_at']);
         });
     }
 
