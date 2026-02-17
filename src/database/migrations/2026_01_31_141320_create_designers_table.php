@@ -20,7 +20,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->string('image', 255);
-            $table->string('inmage_key', 255);
+            $table->string('image_key', 255);
             $table->integer('experience');
             $table->string('good_at', 255);
             $table->string('personality', 255);
