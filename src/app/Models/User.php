@@ -2,17 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 // リレーションの戻り値型（1対1)
 use Illuminate\Database\Eloquent\Relations\HasOne;
 // (1対多）
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\Notifiable;
 
 
 // Userモデルは EloquentのModelを継承する
 // → usersテーブルと自動で連動する
-class User extends Model
+class User extends Authenticatable
 {
+    use HasApiTokens, Notifiable;
+    
     // 入力を許可するカラム
     protected $fillable = [
         'account',
