@@ -14,8 +14,10 @@ use App\Http\Controllers\SalonController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AuthController;
 
-
-// 認証不要
+/*
+* AuthRouting
+* 認証不要
+*/
 Route::post('login',[AuthController::class, 'login']); // ログイン
 Route::post('register',[AuthController::class, 'register']); // 会員登録
 
@@ -29,9 +31,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
-// サービスRouting
-// 認証不要
-Route::get(['services', ServiceController::class, 'index']);
+
+/*
+* ServiceRouting
+* 認証不要
+*/
+Route::get('services', [ServiceController::class, 'index']); // 施術メニュー照会
+
+// 認証、role確認必要
+Route::middleware(['auth:sanctum', 'role:manager'])->group(function(){
+    Route::post('service', [ServiceController::class, 'store']);
+});
 
 
 
