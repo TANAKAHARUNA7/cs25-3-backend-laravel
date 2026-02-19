@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('user_name', 100);
             $table->enum('role', ['client', 'designer', 'manager'])->default('client');
-            $table->string('gender', 100);
+            $table->enum('gender', ['MEN', 'WOMEN', 'Non_binary']);
             $table->string('phone', 30)->nullable();
             $table->date('birth');
             $table->timestamps();
