@@ -81,8 +81,10 @@ class TimeOffController extends Controller
     /**
      * 指定した休日削除
      */
-    public function destroy(string $id)
+    public function destroy(TimeOff $timeOff)
     {
-        TimeOff::where( 'id', $id)->delete();
+        $timeOff->delete();
+        
+
     }
 }
