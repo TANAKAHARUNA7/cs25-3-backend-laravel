@@ -66,7 +66,7 @@ Route::get('timeoffs', [TimeOffController::class, 'index']);
 Route::get('timeoffs/{id}', [TimeOffController::class, 'show']);
 
 // 特定のdesignerの休日照会
-Route::get('timeoffs/{designer_id}', [TimeOffController::class, 'designer']);
+Route::get('timeoffs/designer/{designer_id}', [TimeOffController::class, 'designer']);
 
 // 認証 + role確認必要(managerだけが可能)
 Route::middleware(['auth:sanctum', 'role:manager'])->group(function(){
@@ -74,11 +74,8 @@ Route::middleware(['auth:sanctum', 'role:manager'])->group(function(){
     // Designerの休日を新規作成
     Route::post('timeoffs', [TimeOffController::class, 'store']);
 
-    // 修正
-    Route::put('timeoffs/{id}', [TimeOffController::class, 'update']);
-
     // 削除
-    Route::delete('timeoffs/{id}', [TimeOffController::class, 'destroy']);
+    Route::delete('timeoffs/{timeoff}', [TimeOffController::class, 'destroy']);
 });
 
 
