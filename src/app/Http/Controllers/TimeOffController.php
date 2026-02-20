@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\TimeOff;
-use App\Models\Designer;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 
 class TimeOffController extends Controller
@@ -46,12 +44,36 @@ class TimeOffController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * 特定の休日を照会
      */
-    public function show(string $id)
+    public function show(string $id):JsonResponse
     {
-        //
+        // timeoff_idで該当する休日情報を持ってくる
+        $timeOff = TimeOff::findOrFail($id);
+
+        // レスポンスを返す
+        return response()->json([
+            'success' => true,
+            'date'    => [
+                'time_off' => $timeOff
+            ]
+        ]);
     }
+
+
+    public function designer(string $designer_id):JsonResponse
+    {
+        // designer_idで特定のdesignerの休日を照会
+        $timeOff = TimeOff::when('designer_id', $designer_id)->get();
+
+        return response()->json([
+            'success' => true,
+            'date'    => [
+                'time_off' => $timeOff
+            ]
+        ]);
+    }
+
 
     /**
      * Update the specified resource in storage.
