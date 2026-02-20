@@ -28,18 +28,21 @@ class TimeOffController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-
-        $designer = TimeOff::designer()->findOrFail();
-
-        $request->validate([
-            'designer_id' => ['required', $designer],
+        $validated = $request->validate([
+            'designer_id' => ['required', 'integer', 'exists:designers,id'],
             'start_at'    => ['required', 'date'],
             'end_at'      => ['required', 'date']
         ]);
 
-        TimeOff::created($request);
+        $timeOff = TimeOff::create($validated);
 
-        return response()->json();
+        return response()->json([
+            'success'  => true,
+            'message'  => '登録成功しました。',
+            'date'     => [
+                'time_off' => $timeOff
+            ] 
+        ], 201);
     }
 
     /**
