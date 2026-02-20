@@ -3,17 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\TimeOff;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 
 class TimeOffController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * 全Designerの休日照会
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        //
+        // DB接続しデータを摂取
+        $result = TimeOff::all();
+        
+        // フロントに返す
+        return response()->json($result);
     }
 
     /**
