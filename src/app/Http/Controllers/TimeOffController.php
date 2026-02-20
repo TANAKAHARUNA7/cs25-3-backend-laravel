@@ -61,10 +61,13 @@ class TimeOffController extends Controller
     }
 
 
+    /**
+     * 特定のDesigner休日を照会
+     */
     public function designer(string $designer_id):JsonResponse
     {
         // designer_idで特定のdesignerの休日を照会
-        $timeOff = TimeOff::when('designer_id', $designer_id)->get();
+        $timeOff = TimeOff::where('designer_id', $designer_id)->get();
 
         return response()->json([
             'success' => true,
