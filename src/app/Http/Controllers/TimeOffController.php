@@ -44,7 +44,7 @@ class TimeOffController extends Controller
     }
 
     /**
-     * 特定の休日を照会
+     * 指定した休日を照会
      */
     public function show(string $id):JsonResponse
     {
@@ -61,10 +61,13 @@ class TimeOffController extends Controller
     }
 
 
+    /**
+     * 特定のDesignerの休日を照会
+     */
     public function designer(string $designer_id):JsonResponse
     {
         // designer_idで特定のdesignerの休日を照会
-        $timeOff = TimeOff::when('designer_id', $designer_id)->get();
+        $timeOff = TimeOff::where('designer_id', $designer_id)->get();
 
         return response()->json([
             'success' => true,
@@ -76,18 +79,12 @@ class TimeOffController extends Controller
 
 
     /**
-     * Update the specified resource in storage.
+     * 指定した休日削除
      */
-    public function update(Request $request, string $id)
+    public function destroy(TimeOff $timeOff)
     {
-        //
-    }
+        $timeOff->delete();
+        
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }
