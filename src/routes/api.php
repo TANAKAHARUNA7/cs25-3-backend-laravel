@@ -65,6 +65,9 @@ Route::get('timeoffs', [TimeOffController::class, 'index']);
 // 特定の休日を照会
 Route::get('timeoffs/{id}', [TimeOffController::class, 'show']);
 
+// 特定のdesignerの休日照会
+Route::get('timeoffs/{designer_id}', [TimeOffController::class, 'designer']);
+
 // 認証 + role確認必要(managerだけが可能)
 Route::middleware(['auth:sanctum', 'role:manager'])->group(function(){
     
