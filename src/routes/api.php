@@ -15,7 +15,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AuthController;
 
 /*
-* AuthRouting (認証不要)
+* Auth Routing (認証不要)
 */
 // ログイン
 Route::post('login',[AuthController::class, 'login']); 
@@ -34,8 +34,34 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
+/**
+ * Reservation Routing (認証必要、Client＆Designerのみ)
+ */
+Route::middleware(['auth:sanctum', 'role:client'])->group(function(){
+
+    // 予約履歴照会 : client
+    Route::get('reservation/client', [ReservationController::class, 'clientToIndex']);
+    
+    // 予約作成
+    Route::post('reservation', [ReservationController::class, 'store']);
+    
+});
+
+Route::middleware(['auth:sanctum', 'role:designer'])->group(function(){
+
+    // 予約履歴照会 : designer
+    Route::get('reservation/designer', [ReservationController::class, 'designerToIndex']);
+    
+});
+
+
+
+
+
+
+
 /*
-* ServiceRouting (認証不要)
+* Service Routing (認証不要)
 */
 // Service照会
 Route::get('services', [ServiceController::class, 'index']); 
@@ -57,7 +83,7 @@ Route::middleware(['auth:sanctum', 'role:manager'])->group(function(){
 });
 
 /**
- * TimeOffRouting (認証不要)
+ * TimeOff Routing (認証不要)
  */
 // 全てのDesignerの休日を照会
 Route::get('timeoffs', [TimeOffController::class, 'index']);
@@ -75,7 +101,7 @@ Route::middleware(['auth:sanctum', 'role:manager'])->group(function(){
     Route::post('timeoffs', [TimeOffController::class, 'store']);
 
     // 削除
-    Route::delete('timeoffs/{timeoff}', [TimeOffController::class, 'destroy']);
+    Route::delete('timeoffs/{timeOff}', [TimeOffController::class, 'destroy']);
 });
 
 
