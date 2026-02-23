@@ -22,7 +22,7 @@ class Designer extends Model
     // designers.user_id -> users.id（外部キーを持つ側は belongsTo）
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     // designers.id -> reservations.designer_id（1対多）
