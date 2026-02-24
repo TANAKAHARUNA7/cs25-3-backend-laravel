@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ReservationController extends Controller
 {
@@ -41,6 +42,7 @@ class ReservationController extends Controller
 
                 'designer_name'  => optional(optional($r->designer)->user)->user_name,
                 
+                'status'         => $r->status,
                 'menues' => $r->services->map(function($s) {
                     return [
                         'service_id'   => $s->id,
@@ -88,6 +90,7 @@ class ReservationController extends Controller
                 'day'            => $r->day,
                 'start_at'       => $r->start_at,
                 'end_at'         => $r->end_at,
+                'status'         => $r->status,
                 
                 'menues'         => $r->services->map(function($s){
                     return [
@@ -214,11 +217,80 @@ class ReservationController extends Controller
 
     /**
      * Client　：予約キャンセル
-     * Designer：予約状態変更
      */
-    public function update(Request $request, string $id)
+    public function cancelByClient(Request $request, string $id): JsonResponse
     {
-        //
+        // 1. ログインユーザ情報摂取
+        $user = $request->user();
+
+        // 2. 対象予約取得
+        $reservation = Reservation::where('id', $id)
+            ->where('client_id',$user->id)
+            ->firstOrFail();
+
+        
+        if ($reservation->status === 'cancelled') {
+            return response()->json([
+                'success' => false,
+                'message' => 'すでにキャンセル済みです。'
+            ], 409);
+        }
+
+        //　3. バリデーションチェック
+        $valideted = $request->validate([
+            'cancel_reason' => ['required', 'string'],
+        ]);
+
+        //　4. update
+        $reservation->update([
+            'cancel_reason' => $valideted['cancel_reason'],
+            'cancelled_at'  => now(),
+            'status'        => 'cancelled',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => '予約をキャンセルしました。',
+        ], 200);
+
     }
+
+    /*
+    * Designer：予約状態変更
+    */
+    public function statusChangeByDesigner(Request $request, string $id): JsonResponse
+    {
+        // 1. ログインユーザ情報摂取
+        $user = $request->user();
+
+        // 2. designerID摂取
+        $designerId = $user->designer->id;
+
+        // 2. 対象予約摂取
+        $reservation = Reservation::where('id', $id)
+            ->where('designer_id', $designerId)
+            ->firstOrFail();
+
+        // 3. バリデーションチェック
+        $validate = $request->validate([
+            'status' => [
+                'required',
+                'string',
+                Rule::in(['peding', 'confirmed', 'checked_in', 'completed', 'no_show'])
+            ],
+        ]);
+
+        // 4. update
+        $reservation->update([
+            'status' => $validate['status'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => '予約状況を変更しました。',
+        ]);
+    }
+
+
 
 }
