@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 /**
  * Reservation Routing (認証必要、Client＆Designerのみ)
+ * client
  */
 Route::middleware(['auth:sanctum', 'role:client'])->group(function(){
 
@@ -44,20 +45,22 @@ Route::middleware(['auth:sanctum', 'role:client'])->group(function(){
     
     // 予約作成
     Route::post('reservation', [ReservationController::class, 'store']);
+
+    // 予約キャンセル
+    Route::patch('reservation/{id}/cancel', [ReservationController::class, 'ancelByClient']);
     
 });
 
+// designer
 Route::middleware(['auth:sanctum', 'role:designer'])->group(function(){
 
     // 予約履歴照会 : designer
     Route::get('reservation/designer', [ReservationController::class, 'designerToIndex']);
+
+    // 予約状態変更
+    Route::patch('reservation/{id}/status', [ReservationController::class, 'statusChangeByDesigner']);
     
 });
-
-
-
-
-
 
 
 /*
