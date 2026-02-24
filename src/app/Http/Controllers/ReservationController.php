@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Designer;
+use App\Models\Service;
 use App\Models\Reservation;
+use App\Models\TimeOff;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -109,35 +112,104 @@ class ReservationController extends Controller
      */
     public function store(Request $request)
     {
+        // 1. ログインユーザ情報取得
         $user = $request->user();
 
+        // 2. 入力チェック
         $validated = $request->validate([
-            'day'          => ['required', 'date'],
-            'start_at'     => ['required', 'date_format:H:i:s'],
-            'end_at'       => ['required', 'date_format:H:i:s'],
-            'designer_id'  => ['required', 'integer'],
-            'requirement'  => ['nullable', 'string'],
-            'service_id'   => ['required', 'array', 'min:1'],
+            'day'           => ['required', 'date'],
+            'start_at'      => ['required', 'date_format:H:i:s'],
+            'designer_id'   => ['required', 'integer'],
+            'requirement'   => ['nullable', 'string'],
+            'services'      => ['required', 'array', 'min:1'],
             // 配列のすべての要素のルール
-            'service_id.*' => ['integer', 'exists:services,id'], 
+            'services.*'  => ['required', 'integer', 'exists:services,id'],  
         ]);
 
-        $validated['client_id'] = $user->id;
+        
+        return DB::transaction((function () use ($validated, $user){
 
-        Reservation::create($validated);
+            // 3. サービスから合計時間を計算
+            $serviceIds = $validated['services'];
 
-        return response()->json([
-            'success' => true,
-            'message' => '予約が完了しました。'
-        ], 201);
-    }
+            // サービス取得
+            $services = Service::whereIn('id', $serviceIds)->get();
 
-    /**
-     * 
-     */
-    public function show(string $id)
-    {
-        //
+            // 合計施術時間
+            $totalMinutes = (int) $services->sum('duration_min');
+
+            // 4. 開始→終了時刻を自動計算
+            // 開始時間
+            $startDateTime = Carbon::createFromFormat(
+                'Y-m-d H:i:s',
+                $validated['day'].' '.$validated['start_at']
+            );
+
+            
+            $endDateTime = $startDateTime->copy()->addMinutes($totalMinutes);
+
+            $startTime = $startDateTime->format('H:i:s');
+            $endTime   = $endDateTime->format('H:i:s');
+            
+
+            // 5. 予約重複チェック（同じデザイナー・同日・時間帯が重なる）
+            $reservationOverlap = Reservation::where('designer_id', $validated['designer_id'])
+                ->whereDate('day', $validated['day'])
+                ->whereNull('cancelled_at') // キャンセル済みは除外
+                ->where(function ($q) use ($startTime, $endTime) {
+                    $q->where('start_at', '<', $endTime)
+                      ->where('end_at',   '>', $startTime);
+                })
+                ->lockForUpdate() // 同時に予約が入ることを防止する
+                ->exists();
+
+
+            // 6. TimeOff(休日)との重複チェック（同じデザイナー・日付が重なる）
+            $hasTimeOff = TimeOff::where('designer_id', $validated['designer_id'])
+                ->whereDate('start_at', '<=', $validated['day'])
+                ->whereDate('end_at', '>=', $validated['day'])
+                ->exists();
+
+            if ($reservationOverlap || $hasTimeOff) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'その時間帯は予約不可能です',
+                ], 409);
+            }
+
+            // reservationsに入れるデータだけにする（service_idは除外）
+            $reservationData = collect($validated)->except('services')->all();
+            
+            // end_at保存
+            $reservationData['start_at']  = $startTime;
+            $reservationData['end_at']    = $endTime;
+            $reservationData['client_id'] = $user->id;
+
+            // Reservationテーブルに保存
+            $reservation = Reservation::create($reservationData);
+    
+
+            // 価格を取得
+            $prices = Service::whereIn('id', $serviceIds)->pluck('price', 'id');
+            
+            // sync用データ
+            $syncData = [];
+            foreach ($serviceIds as $sid) {
+                $sid = (int) $sid;
+
+                $syncData[$sid] = [
+                    'unit_price' => (int) ($prices[$sid] ?? 0),
+                ];
+            }
+
+            $reservation->services()->sync($syncData);
+
+            return response()->json([
+                'success' => true,
+                'message' => '予約が完了しました',
+            ], 201);
+
+        }));
     }
 
     /**
