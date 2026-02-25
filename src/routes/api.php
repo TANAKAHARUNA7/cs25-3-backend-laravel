@@ -108,9 +108,24 @@ Route::middleware(['auth:sanctum', 'role:manager'])->group(function(){
 });
 
 
+/**
+ * News Routing
+ */
+// すべてのNewsを照会
+Route::get('news', [NewsController::class, 'index']);
 
+// 特定のニュースを照会
+Route::get('news/{id}', [NewsController::class, 'show']);
 
+// managerのみ操作可能
+Route::middleware(['auth:sanctum', 'role:manager'])->group(function(){
+    
+    // news記事作成
+    Route::post('news', [NewsController::class, 'store']);
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
+    // update
+    Route::patch('news/{id}', [NewsController::class, 'update']);
+
+    // delete
+    Route::delete('news/{id}', [NewsController::class, 'destroy']);
+});
