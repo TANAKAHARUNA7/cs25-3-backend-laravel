@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Services\ImageService;
 use App\Models\News;
 use Illuminate\Http\Request;
 
@@ -24,18 +25,34 @@ class NewsController extends Controller
     /**
      * ニュース作成
      */
-    public function store(Request $request)
+    public function store(Request $request, ImageService $imageService)
     {
-        // バリデーションチェック
-        $validete = $request->validate([
+        // 1. バリデーションチェック
+        $validate = $request->validate([
             'title'     => ['required', 'string'],
             'content'   => ['required', 'string'],
-            'image'     => ['nullabel', 'string'],
-            'image_key' => ['nullabel', 'string'] 
+            'image'     => ['nullable', 'image', 'max:2048'],
         ]);
 
-        //　Insert
-        News::create($validete);
+        // 2. テキストデータをDBに保存 (まずは画像なしでNewsを作成)
+        $news = News::create([
+            'title'   => $validate['title'],
+            'content' => $validate['content'], 
+        ]);
+        
+        // 3. 画像が送られてきた場合のみ処理
+        if ($request->hasFile('image')) {
+            
+            // 画像を storage/app/public/news に保存
+            // 戻り値として image_key と image(URL) が返る
+            $img = $imageService->store($request->file('image'), 'news');
+
+            // 保存した画像情報を News に更新
+            $news->update([
+                'image_key' => $img['image_key'], // 実体の保存パス
+                'image'     => $img['image'],     // 表示用URL
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -61,7 +78,7 @@ class NewsController extends Controller
     /**
      * ニュース修正
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $id, ImageService $imageService)
     {
         //　記事情報摂取
         $news = News::findOrFail($id);
@@ -70,10 +87,27 @@ class NewsController extends Controller
         $validate = $request->validate([
             'title'   => ['required', 'string'],
             'content' => ['required', 'string'], 
+            'image'   => ['nullable', 'image', 'max:2048'],
         ]);
 
-        //　update
+        //　テキスト更新
         $news->update($validate);
+
+        // 画像が来たら差し替え
+        if ($request->hasFile('image')) {
+
+            // 既存画像があれば削除
+            $imageService->delete($news->image_key);
+
+            // 新画像保存
+            $img = $imageService->store($request->file('image'), 'news');
+
+            // 画像情報更新
+            $news->update([
+                'image_key' => $img['image_key'],
+                'image'     => $img['image'],
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -84,13 +118,23 @@ class NewsController extends Controller
 
     /**
      * ニュース削除
+     * DB削除前に画像ファイルも削除する
      */
-    public function destroy(string $id)
+    public function destroy(string $id, ImageService $imageService)
     {
         //　該当する記事をもってくる
         $news = News::findOrFail($id);
 
-        //　削除
-        $news->delete($id);
+        // 画像ファイル削除（存在する場合のみ）
+        $imageService->delete($news->image_key);
+
+        // ③ レコード削除
+        $news->delete();
+
+        return response()->json([
+        'success' => true,
+        'message' => '削除しました。',
+    ]);
+
     }
 }
