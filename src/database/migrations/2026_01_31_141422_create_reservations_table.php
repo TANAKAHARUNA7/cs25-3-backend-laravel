@@ -20,7 +20,7 @@ return new class extends Migration
 
             
             $table->foreignId('designer_id')
-                ->constrained()
+                ->constrained('designers')
                 ->cascadeOnDelete();
 
             $table->text('requirement')->nullable();
