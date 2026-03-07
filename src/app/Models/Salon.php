@@ -14,4 +14,9 @@ class Salon extends Model
         'map',
         'traffic',
     ];
+
+    protected $casts = [
+        'information' => 'array',
+        'traffic'     => 'array',
+    ];
 }
